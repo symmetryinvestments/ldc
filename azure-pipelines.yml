@@ -166,8 +166,8 @@ jobs:
     - macOS_x64
     - macOS_arm64
     - Android
-  # Only run for commits on the master branch and tags.
-  condition: and(succeeded(), or(eq(variables['Build.SourceBranch'], 'refs/heads/master'), startsWith(variables['Build.SourceBranch'], 'refs/tags/')))
+  # Only run for tags.
+  condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
   steps:
     - checkout: none
     - task: DownloadPipelineArtifact@2
@@ -191,7 +191,7 @@ jobs:
           artifactID=${BUILD_SOURCEVERSION:0:8}
         else
           releaseTag=${BUILD_SOURCEBRANCH:10}
-          if [[ "$releaseTag" == *-* ]]; then
+          if [[ "$releaseTag" == *-beta* ]]; then
             isPreRelease=true
           else
             isPreRelease=false
@@ -206,7 +206,7 @@ jobs:
     - task: GitHubRelease@0
       inputs:
         gitHubConnection: kinke
-        repositoryName: ldc-developers/ldc
+        repositoryName: symmetryinvestments/ldc
         action: edit
         tag: $(GITHUB_RELEASE_TAG)
         assets: artifacts/*
