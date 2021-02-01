@@ -158,14 +158,6 @@ packaging_steps_template: &PACKAGING_STEPS_TEMPLATE
     fi
     $tar -cf - --owner=0 --group=0 $artifactName | 7z a artifacts/$artifactName.tar.xz -si -txz -mx9 -mmt$PARALLELISM
     ls -lh artifacts/ldc2-*.tar.xz
-  # Upload to GitHub release (only for commits on the master branch and tags)
-  upload_to_github_script: |
-    cd $CIRRUS_WORKING_DIR
-    if [[ "${CIRRUS_TAG:-}" == v* ]]; then
-      tools/upload-to-github.sh $CIRRUS_TAG ../artifacts/ldc2-*.tar.xz
-    elif [[ "${CIRRUS_TAG:-}" = "" && "$CIRRUS_PR" = "" && "$CIRRUS_BRANCH" = "master" ]]; then
-      tools/upload-to-github.sh CI ../artifacts/ldc2-*.tar.xz
-    fi
 
 # Installs Ubuntu 18.04+ prerequisites.
 # Requires env variables CI_ARCH, HOST_LDC_VERSION, EXTRA_APT_PACKAGES and EXTRA_CMAKE_FLAGS.
@@ -232,7 +224,6 @@ environment:
   CIRRUS_CLONE_DEPTH: 50
   HOST_LDC_VERSION: 1.31.0
   LLVM_VERSION: 15.0.7
-  GITHUB_TOKEN: ENCRYPTED[0955bd48c8d4e5391446fc0149d0719ad0b63df27ec9e6c180a5730a5b10dc7f28f09d1383423db158d21380ee2b022a]
 
 task:
   name: Ubuntu 18.04 x64 multilib rtSanitizers
