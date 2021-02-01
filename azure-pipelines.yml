@@ -166,7 +166,7 @@ jobs:
     - macOS_x64
     - Android
   # Only run for tags.
-  condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
+  #condition: and(succeeded(), startsWith(variables['Build.SourceBranch'], 'refs/tags/'))
   steps:
     - checkout: none
     - task: DownloadPipelineArtifact@2
