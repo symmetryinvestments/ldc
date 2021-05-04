@@ -130,6 +130,6 @@ steps:
     set PATH=%CD%\build\lib;%CD%\libcurl\ldc2;C:\Program Files\Git\usr\bin;%PATH%
     call "%LDC_VSDIR%\Common7\Tools\VsDevCmd.bat" -arch=%ARCH%
     cd build
-    ctest -j4 --output-on-failure -E "dmd-testsuite|lit-tests|ldc2-unittest"
+    ctest -j4 --output-on-failure -E "dmd-testsuite|lit-tests|ldc2-unittest|^std\.format\.internal\.write.*-shared$"
   displayName: Run defaultlib unittests & druntime integration tests
   condition: succeededOrFailed()
