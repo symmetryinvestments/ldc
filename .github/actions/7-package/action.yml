@@ -79,6 +79,14 @@ runs:
           ../installed/bin/reggae --version -b ninja
         fi
 
+    - name: 'Symmetry: Add default switches `-fvisibility=hidden -link-defaultlib-shared -link-internally` to Windows ldc2.conf'
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        cd ..\installed
+        (cat etc\ldc2.conf).replace('"-defaultlib=phobos2-ldc,druntime-ldc",', '"-defaultlib=phobos2-ldc,druntime-ldc", "-fvisibility=hidden", "-link-defaultlib-shared", "-link-internally",') | Set-Content etc\ldc2.conf
+        cat etc\ldc2.conf
+
     - name: Pack installation dir
       shell: bash
       run: |

@@ -54,11 +54,15 @@ runs:
       run: |
         echo on
         @echo Run 32/64-bit hello-world smoke test with internal toolchain
+        set PATH=%CD%\ldc2-multilib\bin;%PATH%
         ldc2-multilib\bin\ldc2 -v -mscrtlib=vcruntime140 -run hello.d || exit /b
+        set PATH=%CD%\ldc2-multilib\lib32;%PATH%
         ldc2-multilib\bin\ldc2 -v -mscrtlib=vcruntime140 -m32 -run hello.d || exit /b
 
         @echo Run 32/64-bit hello-world smoke test with MSVC auto-detection
+        set PATH=%CD%\ldc2-multilib\bin;%PATH%
         ldc2-multilib\bin\ldc2 -v -run hello.d || exit /b
+        set PATH=%CD%\ldc2-multilib\lib32;%PATH%
         ldc2-multilib\bin\ldc2 -v -m32 -run hello.d || exit /b
 
         @echo Run 32/64-bit hello-world smoke test with shared libs
