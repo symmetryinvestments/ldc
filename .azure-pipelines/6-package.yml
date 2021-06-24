@@ -60,6 +60,14 @@ steps:
     fi
   displayName: Build & copy reggae
 
+# Symmetry: add default switches `-fvisibility=hidden -link-defaultlib-shared -linkonce-templates`
+- powershell: |
+    cd ..\installed
+    (cat etc\ldc2.conf).replace('"-defaultlib=phobos2-ldc,druntime-ldc",', '"-defaultlib=phobos2-ldc,druntime-ldc", "-fvisibility=hidden", "-link-defaultlib-shared", "-linkonce-templates",') | Set-Content etc\ldc2.conf
+    cat etc\ldc2.conf
+  displayName: Tweak ldc2.conf for Symmetry
+  condition: and(succeeded(), startsWith(variables['Agent.OS'], 'Windows'))
+
 # Pack & publish artifact(s)
 - bash: |
     set -ex
