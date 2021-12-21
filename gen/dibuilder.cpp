@@ -19,6 +19,7 @@
 #include "dmd/module.h"
 #include "dmd/mtype.h"
 #include "dmd/nspace.h"
+#include "dmd/root/dcompat.h"
 #include "dmd/target.h"
 #include "dmd/template.h"
 #include "driver/cl_options.h"
@@ -51,7 +52,8 @@ static cl::opt<cl::boolOrDefault> emitColumnInfo(
 namespace ldc {
 
 // in gen/cpp-imitating-naming.d
-const char *convertDIdentifierToCPlusPlus(const char *name, size_t nameLength);
+const char *convertDIdentifierToCPlusPlus(const char *name,
+                                          d_size_t nameLength);
 
 namespace {
 llvm::StringRef uniqueIdent(Type *t) {
@@ -741,7 +743,7 @@ DIType DIBuilder::CreateDelegateType(TypeDelegate *type) {
   const auto file = CreateFile();
 
   LLMetadata *elems[] = {
-      CreateMemberType(0, Type::tvoidptr, file, "context", 0,
+      CreateMemberType(0, Type::tvoidptr, file, "ptr", 0,
                        Visibility::public_),
       CreateMemberType(0, type->next->pointerTo(), file, "funcptr",
                        target.ptrsize, Visibility::public_)};
