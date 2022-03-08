@@ -157,7 +157,7 @@ script:
   - installed/bin/ldc2 -run tests/d2/dmd-testsuite/runnable/test22597.c
   # Build & copy dub
   - export DMD="$PWD/installed/bin/ldmd2"
-  - git clone --recursive https://github.com/dlang/dub.git
+  - git clone --recursive https://github.com/kinke/dub.git
   - cd dub
   - git checkout "$(cat ../packaging/dub_version)"
   - $DMD -run build.d -O -w -linkonce-templates
