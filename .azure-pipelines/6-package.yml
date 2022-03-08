@@ -24,7 +24,7 @@ steps:
 - bash: |
     set -ex
     cd ..
-    git clone --recursive https://github.com/dlang/dub.git
+    git clone --recursive https://github.com/kinke/dub.git
     cd dub
     git checkout "$(cat $BUILD_SOURCESDIRECTORY/packaging/dub_version)"
     DFLAGS='' $DMD -run build.d -O -w -linkonce-templates $DFLAGS
