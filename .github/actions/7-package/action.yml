@@ -79,6 +79,43 @@ runs:
           ../installed/bin/reggae --version -b ninja
         fi
 
+    # Symmetry: bundle ninja too
+    - name: Clone ninja
+      shell: bash
+      run: |
+        set -eux
+        cd ..
+        git clone --recursive https://github.com/symmetryinvestments/ninja.git
+        cd ninja
+        git checkout "$(cat ../ldc/packaging/ninja_version)"
+    - name: Build & copy ninja (Posix)
+      if: runner.os != 'Windows' && inputs.os != 'android' # compile errors on Android
+      shell: bash
+      run: |
+        set -eux
+        cd ../ninja
+        extraFlags="${CROSS_CMAKE_FLAGS:-}"
+        if [[ '${{ runner.os }}' == Linux && '${{ inputs.os }}' == '' ]]; then
+          extraFlags+=" -DCMAKE_EXE_LINKER_FLAGS=-static-libstdc++"
+        fi
+        cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE=Release $extraFlags
+        cmake --build build
+        cp build/ninja ../installed/bin/
+        if [[ '${{ inputs.cross_target_triple }}' == '' ]]; then
+          ../installed/bin/ninja --version
+        fi
+    - name: Build & copy ninja (Windows) # needs MSVC env
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        call "%LDC_VSDIR%\Common7\Tools\VsDevCmd.bat" -arch=${{ inputs.arch }} || exit /b
+        echo on
+        cd ..\ninja || exit /b
+        cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE=Release || exit /b
+        cmake --build build || exit /b
+        copy build\ninja.exe ..\installed\bin\ || exit /b
+        ..\installed\bin\ninja --version || exit /b
+
     - name: 'Symmetry: Add default switches `-fvisibility=hidden -link-defaultlib-shared -link-internally` to Windows ldc2.conf'
       if: runner.os == 'Windows'
       shell: pwsh
