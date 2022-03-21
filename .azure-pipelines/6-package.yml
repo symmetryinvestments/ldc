@@ -60,6 +60,44 @@ steps:
     fi
   displayName: Build & copy reggae
 
+# Symmetry: bundle ninja too
+- bash: |
+    set -ex
+    cd ..
+    git clone --recursive https://github.com/ninja-build/ninja.git ninja-src
+    cd ninja-src
+    git checkout "$(cat $BUILD_SOURCESDIRECTORY/packaging/ninja_version)"
+  displayName: Clone ninja
+- bash: |
+    set -ex
+    cd ..
+    export PATH="$PWD/ninja:$PATH" # for macOS
+    cd ninja-src
+    extraFlags=($EXTRA_CMAKE_FLAGS_CROSS ${EXTRA_CMAKE_FLAGS_ANDROID:-})
+    [[ "$CI_OS" == "linux" ]] && extraFlags+=(-DCMAKE_EXE_LINKER_FLAGS=-static-libstdc++)
+    cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE=Release "${extraFlags[@]}"
+    cmake --build build
+    cp build/ninja ../installed/bin
+    if [[ "$EXTRA_CMAKE_FLAGS_CROSS" == "" ]]; then
+      ../installed/bin/ninja --version
+    fi
+  # note: compile errors on Android
+  displayName: Build & copy ninja (Linux/Mac)
+  condition: and(succeeded(), in(variables['CI_OS'], 'linux', 'osx'))
+- script: |
+    echo on
+    cd ..
+    call "%LDC_VSDIR%\Common7\Tools\VsDevCmd.bat" -arch=%ARCH% || exit /b
+    echo on
+    set PATH=%CD%\ninja;%PATH%
+    cd ninja-src || exit /b
+    cmake -G Ninja -Bbuild -DCMAKE_BUILD_TYPE=Release || exit /b
+    cmake --build build || exit /b
+    copy build\ninja.exe ..\installed\bin || exit /b
+    ..\installed\bin\ninja.exe --version || exit /b
+  displayName: Build & copy ninja (Windows)
+  condition: and(succeeded(), eq(variables['CI_OS'], 'windows'))
+
 # Symmetry: add default switches `-fvisibility=hidden -link-defaultlib-shared -link-internally`
 - powershell: |
     cd ..\installed
