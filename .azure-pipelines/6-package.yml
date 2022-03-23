@@ -64,7 +64,7 @@ steps:
 - bash: |
     set -ex
     cd ..
-    git clone --recursive https://github.com/ninja-build/ninja.git ninja-src
+    git clone --recursive https://github.com/symmetryinvestments/ninja.git ninja-src
     cd ninja-src
     git checkout "$(cat $BUILD_SOURCESDIRECTORY/packaging/ninja_version)"
   displayName: Clone ninja
