@@ -172,7 +172,7 @@ script:
   - cp bin/{rdmd,ddemangle,dustmite} ../installed/bin
   - cd ..
   # Build & copy reggae
-  - git clone --recursive https://github.com/atilaneves/reggae.git
+  - git clone --recursive https://github.com/kinke/reggae.git
   - cd reggae
   - git checkout "$(cat ../packaging/reggae_version)"
   - DFLAGS="-O -linkonce-templates" ../installed/bin/dub build -v --build-mode=allAtOnce --combined

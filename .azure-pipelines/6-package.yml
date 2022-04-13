@@ -48,7 +48,7 @@ steps:
 - bash: |
     set -ex
     cd ..
-    git clone --recursive https://github.com/atilaneves/reggae.git
+    git clone --recursive https://github.com/kinke/reggae.git
     cd reggae
     git checkout "$(cat $BUILD_SOURCESDIRECTORY/packaging/reggae_version)"
     DFLAGS="-O -linkonce-templates $DFLAGS" ../host-ldc/bin/dub build -v --build-mode=allAtOnce --combined \
