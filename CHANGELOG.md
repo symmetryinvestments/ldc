@@ -1,7 +1,7 @@
 # LDC master
 
 #### Big news
-- Frontend, druntime and Phobos are at version [2.100.0](https://dlang.org/changelog/2.100.0.html). (#3970)
+- Frontend, druntime and Phobos are at version [2.100.1](https://dlang.org/changelog/2.100.0.html). (#3970, #4008, #4009)
 - LLVM for prebuilt packages bumped to v14.0.3. (#3952, #3979)
   - All LLVM targets are enabled now (=> more targets for cross-compilation).
   - For the Mac package, the minimum supported macOS version has been raised to v10.12.
@@ -13,6 +13,7 @@
 - Supports LLVM 9.0 - 14.0.
 
 #### Bug fixes
+- Report unexpected type repaints as fatal ICEs instead of crashing. (#3990, #3991)
 
 #### Internals
 - Main CI was moved from Azure Pipelines to GitHub Actions. Any fork on GitHub can trivially reuse the fully automated prebuilt packages generation & upload to a GitHub release. (#3978)
