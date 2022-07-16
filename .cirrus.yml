@@ -279,7 +279,7 @@ task:
   # Build & copy reggae
   build_reggae_script: |
     cd $CIRRUS_WORKING_DIR/..
-    git clone --recursive https://github.com/atilaneves/reggae.git
+    git clone --recursive https://github.com/kinke/reggae.git
     cd reggae
     git checkout "$(cat $CIRRUS_WORKING_DIR/packaging/reggae_version)"
     DFLAGS="-O -linkonce-templates" ../dub/bin/dub build -v --combined --compiler="$PWD/../installed/bin/ldc2"
