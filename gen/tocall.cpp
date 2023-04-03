@@ -839,7 +839,8 @@ static LLValue *DtoCallableValue(DValue *fn) {
 
 // FIXME: this function is a mess !
 DValue *DtoCallFunction(Loc loc, Type *resulttype, DValue *fnval,
-                        Expressions *arguments, LLValue *sretPointer, bool directcall) {
+                        Expressions *arguments, LLValue *sretPointer,
+                        bool directcall, bool isMustTail) {
   IF_LOG Logger::println("DtoCallFunction()");
   LOG_SCOPE
 
@@ -1060,6 +1061,18 @@ DValue *DtoCallFunction(Loc loc, Type *resulttype, DValue *fnval,
   attrlist = attrlist.addFnAttributes(
       gIR->context(), llvm::AttrBuilder(gIR->context(), attrbuildattribs));
   call->setAttributes(attrlist);
+  if (isMustTail) {
+    if (auto ci = llvm::dyn_cast<llvm::CallInst>(call)) {
+      ci->setTailCallKind(llvm::CallInst::TCK_MustTail);
+    } else {
+      if (!tf->isNothrow()) {
+        error(loc, "cannot perform tail-call - callee must be nothrow");
+      } else {
+        error(loc, "cannot perform tail-call - no code like destructors or scope(exit) should run after the call");
+      }
+      fatal();
+    }
+  }
 
   // Special case for struct constructor calls: For temporaries, using the
   // this pointer value returned from the constructor instead of the alloca
