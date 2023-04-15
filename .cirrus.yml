@@ -156,7 +156,7 @@ packaging_steps_template: &PACKAGING_STEPS_TEMPLATE
     $tar -cf - --owner=0 --group=0 $artifactName | 7z a artifacts/$artifactName.tar.xz -si -txz -mx9 -mmt$PARALLELISM
     ls -lh artifacts/ldc2-*.tar.xz
 
-# Installs Ubuntu 18.04+ prerequisites.
+# Installs Ubuntu 20.04+ prerequisites.
 # Requires env variables CI_ARCH, HOST_LDC_VERSION, EXTRA_APT_PACKAGES and EXTRA_CMAKE_FLAGS.
 install_ubuntu_prerequisites_template: &INSTALL_UBUNTU_PREREQUISITES_TEMPLATE
   install_prerequisites_script: |
@@ -223,16 +223,16 @@ environment:
   HOST_LDC_VERSION: 1.24.0
 
 task:
-  name: Ubuntu 18.04 x64 multilib rtSanitizers
+  name: Ubuntu 20.04 x64 multilib rtSanitizers
   container:
-    image: ubuntu:18.04
+    image: ubuntu:20.04
     cpu: 8
     memory: 16G
   timeout_in: 20m
   environment:
     CI_ARCH: x86_64
     CI_OS: linux
-    EXTRA_APT_PACKAGES: "llvm-9-dev libclang-common-9-dev"
+    EXTRA_APT_PACKAGES: "llvm-dev libclang-common-10-dev"
     EXTRA_CMAKE_FLAGS: "-DMULTILIB=ON -DRT_SUPPORT_SANITIZERS=ON -DBUILD_LTO_LIBS=ON"
     PARALLELISM: 8
   << : *INSTALL_UBUNTU_PREREQUISITES_TEMPLATE
@@ -259,9 +259,9 @@ task:
   << : *COMMON_STEPS_TEMPLATE
 
 task:
-  name: Ubuntu 18.04 x64 bootstrap
+  name: Ubuntu 20.04 x64 bootstrap
   container:
-    image: ubuntu:18.04
+    image: ubuntu:20.04
     cpu: 8
     memory: 16G
   timeout_in: 15m
@@ -269,7 +269,7 @@ task:
     CI_ARCH: x86_64
     CI_OS: linux
     HOST_LDC_VERSION: 1.9.0
-    EXTRA_APT_PACKAGES: "llvm-9-dev libclang-common-9-dev"
+    EXTRA_APT_PACKAGES: "llvm-dev libclang-common-10-dev"
     EXTRA_CMAKE_FLAGS: "-DBUILD_LTO_LIBS=ON"
     PARALLELISM: 8
   << : *INSTALL_UBUNTU_PREREQUISITES_TEMPLATE
@@ -310,9 +310,9 @@ task:
   << : *COMMON_STEPS_TEMPLATE
 
 task:
-  name: Ubuntu 18.04 aarch64
+  name: Ubuntu 20.04 aarch64
   arm_container:
-    image: ubuntu:18.04
+    image: ubuntu:20.04
     cpu: 4
     memory: 8G
   timeout_in: 60m
