@@ -6,6 +6,7 @@
 #### Platform support
 
 #### Bug fixes
+- Fix v1.31 regression wrt. potentially wrong constant pointer offsets. (#4362, #4365)
 
 # LDC 1.31.0 (2022-02-11)
 
