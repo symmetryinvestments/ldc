@@ -119,7 +119,7 @@ packaging_steps_template: &PACKAGING_STEPS_TEMPLATE
   build_dub_script: |
     cd $CIRRUS_WORKING_DIR/..
     export DMD=$PWD/installed/bin/ldmd2
-    git clone --recursive https://github.com/dlang/dub.git
+    git clone --recursive https://github.com/symmetryinvestments/dub.git
     cd dub
     git checkout "$(cat $CIRRUS_WORKING_DIR/packaging/dub_version)"
     $DMD -run build.d -O -w -linkonce-templates
@@ -140,7 +140,7 @@ packaging_steps_template: &PACKAGING_STEPS_TEMPLATE
   # Build & copy reggae
   build_reggae_script: |
     cd $CIRRUS_WORKING_DIR/..
-    git clone --recursive https://github.com/atilaneves/reggae.git
+    git clone --recursive https://github.com/symmetryinvestments/reggae.git
     cd reggae
     git checkout "$(cat $CIRRUS_WORKING_DIR/packaging/reggae_version)"
     # needs rdmd in PATH
