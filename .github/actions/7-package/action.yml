@@ -29,7 +29,7 @@ runs:
       run: |
         set -eux
         cd ..
-        git clone --recursive https://github.com/dlang/dub.git
+        git clone --recursive https://github.com/symmetryinvestments/dub.git
         cd dub
         git checkout "$(cat ../ldc/packaging/dub_version)"
 
@@ -60,7 +60,7 @@ runs:
       run: |
         set -eux
         cd ..
-        git clone --recursive https://github.com/kinke/reggae.git
+        git clone --recursive https://github.com/symmetryinvestments/reggae.git
         cd reggae
         git checkout "$(cat ../ldc/packaging/reggae_version)"
 
@@ -116,12 +116,12 @@ runs:
         copy build\ninja.exe ..\installed\bin\ || exit /b
         ..\installed\bin\ninja --version || exit /b
 
-    - name: 'Symmetry: Add default switches `-fvisibility=hidden -link-defaultlib-shared -link-internally` to Windows ldc2.conf'
+    - name: 'Symmetry: Add default switch `-link-internally` to Windows ldc2.conf'
       if: runner.os == 'Windows'
       shell: pwsh
       run: |
         cd ..\installed
-        (cat etc\ldc2.conf).replace('"-defaultlib=phobos2-ldc,druntime-ldc",', '"-defaultlib=phobos2-ldc,druntime-ldc", "-fvisibility=hidden", "-link-defaultlib-shared", "-link-internally",') | Set-Content etc\ldc2.conf
+        (cat etc\ldc2.conf).replace('"-defaultlib=phobos2-ldc,druntime-ldc",', '"-defaultlib=phobos2-ldc,druntime-ldc", "-link-internally",') | Set-Content etc\ldc2.conf
         cat etc\ldc2.conf
 
     - name: Pack installation dir
