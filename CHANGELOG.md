@@ -6,6 +6,29 @@
 
 #### Bug fixes
 
+# LDC 1.32.2 (2023-05-12)
+
+#### Big news
+- New command-line option `--fwarn-stack-size=<threshold>` with LLVM 13+. (#4378)
+- New command-line option `--fsplit-stack` for incremental stack allocations, see https://llvm.org/docs/SegmentedStacks.html. (#4379)
+  - New UDA `ldc.attributes.noSplitStack` disables it on a per-function basis. (#4382)
+- New command-line option `--indent` for the `timetrace2txt` tool. (#4391)
+
+#### Bug fixes
+- Fix potentially huge compile slowdowns with `-g` and LLVM 15+. (#4354, #4393)
+- Treat *all* LLVM warnings as regular warnings (e.g., errors with `-w`). Requires LLVM 13+. (#4384)
+
+# LDC 1.32.1 (2023-04-17)
+
+#### Big news
+- The prebuilt Linux packages are now generated on a Ubuntu 20.04 box, so the min required `glibc` version has been raised from 2.26 to 2.31. (#4367)
+
+#### Bug fixes
+- Fix empty `ldc.gccbuiltins_*` modules with LLVM 15+. (#4347, #4350)
+- Fix v1.31 regression wrt. potentially wrong constant pointer offsets. (#4362, #4365)
+- Windows: Fix v1.32 regression wrt. leaking `Throwable.info` backtraces. (#4369)
+- Fix C assert calls for newlib targets. (#4351)
+
 # LDC 1.32.0 (2023-03-12)
 
 #### Big news
