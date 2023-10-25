@@ -117,6 +117,24 @@ const char *getABI(const llvm::Triple &triple, const llvm::SmallVectorImpl<llvm:
       if (ABIName.startswith("ilp32"))
         return "ilp32";
       break;
+#if LDC_LLVM_VER >= 1600
+    case llvm::Triple::loongarch32:
+      if (ABIName.startswith("ilp32s"))
+        return "ilp32s";
+      if (ABIName.startswith("ilp32f"))
+        return "ilp32f";
+      if (ABIName.startswith("ilp32d"))
+        return "ilp32d";
+      break;
+    case llvm::Triple::loongarch64:
+      if (ABIName.startswith("lp64f"))
+        return "lp64f";
+      if (ABIName.startswith("lp64d"))
+        return "lp64d";
+      if (ABIName.startswith("lp64s"))
+        return "lp64s";
+      break;
+#endif // LDC_LLVM_VER >= 1600
     default:
       break;
     }
@@ -140,6 +158,20 @@ const char *getABI(const llvm::Triple &triple, const llvm::SmallVectorImpl<llvm:
     return "lp64";
   case llvm::Triple::riscv32:
     return "ilp32";
+#if LDC_LLVM_VER >= 1600
+  case llvm::Triple::loongarch32:
+    if (isFeatureEnabled(features, "d"))
+      return "ilp32d";
+    if (isFeatureEnabled(features, "f"))
+      return "ilp32f";
+    return "ilp32s";
+  case llvm::Triple::loongarch64:
+    if (isFeatureEnabled(features, "d"))
+      return "lp64d";
+    if (isFeatureEnabled(features, "f"))
+      return "lp64f";
+    return "lp64d";
+#endif // LDC_LLVM_VER >= 1600
   default:
     return "";
   }
@@ -237,6 +269,14 @@ static std::string getRiscv64TargetCPU(const llvm::Triple &triple) {
   return "generic-rv64";
 }
 
+static std::string getLoongArch32TargetCPU(const llvm::Triple &triple) {
+  return "generic-la32";
+}
+
+static std::string getLoongArch64TargetCPU(const llvm::Triple &triple) {
+  return "generic-la64";
+}
+
 /// Returns the LLVM name of the default CPU for the provided target triple.
 static std::string getTargetCPU(const llvm::Triple &triple) {
   switch (triple.getArch()) {
@@ -258,6 +298,12 @@ static std::string getTargetCPU(const llvm::Triple &triple) {
     return getRiscv32TargetCPU(triple);
   case llvm::Triple::riscv64:
     return getRiscv64TargetCPU(triple);
+#if LDC_LLVM_VER >= 1600
+  case llvm::Triple::loongarch32:
+    return getLoongArch32TargetCPU(triple);
+  case llvm::Triple::loongarch64:
+    return getLoongArch64TargetCPU(triple);
+#endif // LDC_LLVM_VER >= 1600
   }
 }
 
@@ -468,6 +514,14 @@ createTargetMachine(const std::string targetTriple, const std::string arch,
     }
   }
 
+  // For LoongArch 64-bit target default to la64 if nothing has been selected
+  // All current LoongArch targets have 64-bit floating point registers.
+#if LDC_LLVM_VER >= 1600
+  if (triple.getArch() == llvm::Triple::loongarch64 && features.empty()) {
+    features = {"+d"};
+  }
+#endif
+
   // Handle cases where LLVM picks wrong default relocModel
 #if LDC_LLVM_VER >= 1600
   if (relocModel.has_value()) {}
@@ -485,6 +539,10 @@ createTargetMachine(const std::string targetTriple, const std::string arch,
       // features (like ASLR). We default to PIC code to avoid linking issues on
       // these OSes.
       // On Android, PIC is default as well.
+      relocModel = llvm::Reloc::PIC_;
+    } else if (triple.isOSFreeBSD()) {
+      // We default to PIC code to avoid linking issues on FreeBSD, especially
+      // on aarch64.
       relocModel = llvm::Reloc::PIC_;
     } else {
       // ARM for other than Darwin or Android defaults to static
