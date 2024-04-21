@@ -202,7 +202,7 @@ install_ubuntu_prerequisites_template: &INSTALL_UBUNTU_PREREQUISITES_TEMPLATE
 environment:
   CIRRUS_CLONE_DEPTH: 50
   HOST_LDC_VERSION: 1.31.0
-  LLVM_VERSION: 18.1.3
+  LLVM_VERSION: 18.1.4
 
 task:
   name: Ubuntu rolling x64 shared-libs-only gdmd
