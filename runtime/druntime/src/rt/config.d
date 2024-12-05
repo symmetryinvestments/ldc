@@ -49,7 +49,7 @@ version (LDC) // use @weak
 
     extern(C) __gshared @weak
     {
-        pragma(mangle, "rt_envvars_enabled") bool _rt_envvars_enabled = false;
+        pragma(mangle, "rt_envvars_enabled") bool _rt_envvars_enabled = true; // Symmetry-specific
         pragma(mangle, "rt_cmdline_enabled") bool _rt_cmdline_enabled = true;
         pragma(mangle, "rt_options") string[] _rt_options = [];
     }
