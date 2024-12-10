@@ -329,6 +329,30 @@ public:
 
   //////////////////////////////////////////////////////////////////////////////
 
+  void visit(ObjcClassReferenceExp *e) override {
+    IF_LOG Logger::print("ObjcClassReferenceExp::toElem: %s @ %s\n", e->toChars(),
+                         e->type->toChars());
+    LOG_SCOPE;
+
+    auto lType = DtoType(e->type);
+
+    if (auto iface = e->classDeclaration->isInterfaceDeclaration()) {
+
+      // Protocols
+      result = new DImValue(e->type, gIR->objc.deref(iface, lType));
+      return;
+    } else {
+
+      // Classes
+      result = new DImValue(e->type, gIR->objc.deref(e->classDeclaration, lType));
+      return;
+    }
+
+    llvm_unreachable("Unknown type for ObjcClassReferenceExp.");
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   void visit(VarExp *e) override {
     IF_LOG Logger::print("VarExp::toElem: %s @ %s\n", e->toChars(),
                          e->type->toChars());
@@ -801,7 +825,7 @@ public:
     }
 
     DValue *result =
-        DtoCallFunction(e->loc, e->type, fnval, e->arguments, sretPointer);
+        DtoCallFunction(e->loc, e->type, fnval, e->arguments, sretPointer, e->directcall);
 
     if (canEmitVTableUnchangedAssumption && dfnval->vtable) {
       // Reload vtable ptr. It's the first element so instead of GEP+load we can
@@ -809,7 +833,7 @@ public:
       // access to the type of the class to do a GEP).
       auto vtable = DtoLoad(dfnval->vtable->getType(), dfnval->vthis);
       auto cmp = p->ir->CreateICmpEQ(vtable, dfnval->vtable);
-      p->ir->CreateCall(GET_INTRINSIC_DECL(assume), {cmp});
+      p->ir->CreateCall(GET_INTRINSIC_DECL(assume, {}), {cmp});
     }
 
     if (delayedDtorVar) {
@@ -1017,10 +1041,9 @@ public:
     auto &PGO = gIR->funcGen().pgo;
     PGO.setCurrentStmt(e);
 
-    DValue *l = toElem(e->e1);
-
     Type *e1type = e->e1->type->toBasetype();
 
+    DValue *l = toElem(e->e1);
     if (VarDeclaration *vd = e->var->isVarDeclaration()) {
       AggregateDeclaration *ad;
       LLValue *aggrPtr;
@@ -1766,7 +1789,7 @@ public:
     p->ir->SetInsertPoint(failedbb);
 
     if (global.params.checkAction == CHECKACTION_halt) {
-      p->ir->CreateCall(GET_INTRINSIC_DECL(trap), {});
+      p->ir->CreateCall(GET_INTRINSIC_DECL(trap, {}), {});
       p->ir->CreateUnreachable();
     } else {
       /* DMD Bugzilla 8360: If the condition is evaluated to true,
@@ -1923,7 +1946,7 @@ public:
     IF_LOG Logger::print("HaltExp::toElem: %s\n", e->toChars());
     LOG_SCOPE;
 
-    p->ir->CreateCall(GET_INTRINSIC_DECL(trap), {});
+    p->ir->CreateCall(GET_INTRINSIC_DECL(trap, {}), {});
     p->ir->CreateUnreachable();
 
     // this terminated the basicblock, start a new one
