@@ -264,7 +264,7 @@ inout(TypeInfo) unqualify(return scope inout(TypeInfo) cti) pure nothrow @nogc
   */
 private uint __typeAttrs(const scope TypeInfo ti) pure nothrow
 {
-    uint attr = (!(ti.flags & 1) ? BlkAttr.NO_SCAN : 0) | BlkAttr.APPENDABLE;
+    uint attr = (!(ti.flags & 1) ? BlkAttr.NO_SCAN : 0);
     if (typeid(ti) is typeid(TypeInfo_Struct))
     {
 	auto sti = cast(TypeInfo_Struct)cast(void*)ti;
@@ -1184,9 +1184,13 @@ byte[] _d_arrayappendcTX(const TypeInfo ti, return scope ref byte[] px, size_t n
     {
 	// could not set the size, we must reallocate.
 	auto newcap = newCapacity(newlength, sizeelem);
-        auto newArr = gc_malloc(newcap, __typeAttrs(tinext) | BlkAttr.APPENDABLE, tinext);
+	auto attrs = __typeAttrs(tinext) | BlkAttr.APPENDABLE;
+	auto newArr = gc_malloc(newcap, attrs, tinext);
 	if(newsize != newcap)
 	{
+	    // zero any extra scannable memory, as we requested it, we own it.
+	    if (!(attrs & BlkAttr.NO_SCAN))
+		memset(newArr + newsize, 0, newcap - newsize);
 	    // need to adjust the used space, as it defaults to the size of the
 	    // requested data.
 	    auto setUsedResult = gc_shrinkArrayUsed(newArr[0 .. newsize], newcap, isshared);
