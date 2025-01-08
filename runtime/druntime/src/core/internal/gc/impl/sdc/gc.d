@@ -156,7 +156,7 @@ private GC initializeQuiet()
 private GC initialize()
 {
     import core.stdc.stdio;
-    printf("using (pthread) SDC GC!\n");
+    printf("using SDC GC!\n");
     return initializeQuiet();
 }
 
