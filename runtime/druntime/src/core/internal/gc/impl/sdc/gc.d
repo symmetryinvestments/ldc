@@ -115,6 +115,7 @@ extern(C) void _d_register_sdc_gc()
 
     import core.gc.registry;
     registerGCFactory("sdc", &initialize);
+    registerGCFactory("sdcq", &initializeQuiet);
 }
 
 alias ThreadScanFn = extern(C) void function(void *context, void *start, void *end) nothrow;
@@ -142,16 +143,21 @@ extern(C) void thread_scanAll_C(void *context, ThreadScanFn scanFn)
 // shim, and can just be initialized at compile time.
 private __gshared SnazzyGC instance = new SnazzyGC;
 
-private GC initialize()
+private GC initializeQuiet()
 {
-    import core.stdc.stdio;
-    printf("using SDC GC!\n");
     // check the config to see if we should set the thread count for scanning.
     import core.gc.config;
     // ignore the thread count if it's the default.
     if (config.parallel != typeof(config).init.parallel)
         __sd_gc_set_scanning_thread_count(config.parallel + 1);
     return instance;
+}
+
+private GC initialize()
+{
+    import core.stdc.stdio;
+    printf("using (pthread) SDC GC!\n");
+    return initializeQuiet();
 }
 
 final class SnazzyGC : GC
