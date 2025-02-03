@@ -2489,8 +2489,13 @@ else version (Posix)
             obj.initDataStorage();
 
             atomicStore!(MemoryOrder.raw)(obj.m_isRunning, true);
-            Thread.setThis(obj); // allocates lazy TLS (see Issue 11981)
-            Thread.add(obj);     // can only receive signals from here on
+
+	    // ensure we can't run a GC cycle between these 2 lines.
+	    Thread.slock.lock_nothrow();
+	    Thread.setThis(obj); // allocates lazy TLS (see Issue 11981)
+	    Thread.add(obj);     // can only receive signals from here on
+	    Thread.slock.unlock_nothrow();
+
             scope (exit)
             {
                 Thread.remove(obj);
