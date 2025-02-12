@@ -41,12 +41,15 @@ private void setupContextAndBitmap(uint bits, const TypeInfo ti, ref const(void)
     if (ti !is null)
     {
         context = (bits & BlkAttr.STRUCTFINAL) ? cast(void *)ti : null;
-        ptrBitmap = cast(immutable size_t *)ti.rtInfo();
+        ptrBitmap = cast(immutable size_t *)rtinfoHasPointers;
+        // No precise scanning for now, it is not worth paying the price of a
+        // possible cache-busting virtual call.
+        //ptrBitmap = cast(immutable size_t *)ti.rtInfo();
     }
     else
     {
         context = null;
-        ptrBitmap = cast(immutable size_t *)rtinfoHasPointers; // note the bits
+        ptrBitmap = cast(immutable size_t *)rtinfoHasPointers;
     }
 }
 
@@ -135,14 +138,15 @@ interface GC
     {
         immutable(size_t) *ptrBitmap;
         // no context pointer for realloc (it's not allowed)
-        if (ti !is null)
+        /*if (ti !is null)
         {
             ptrBitmap = cast(immutable size_t*)ti.rtInfo();
         }
         else
         {
             ptrBitmap = cast(immutable size_t*)rtinfoHasPointers;
-        }
+        }*/
+        ptrBitmap = cast(immutable size_t*)rtinfoHasPointers;
         return realloc(p, size, bits, ptrBitmap);
     }
 

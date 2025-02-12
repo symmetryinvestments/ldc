@@ -767,11 +767,30 @@ void finalize_array2(void* p, size_t size, TypeInfo_Struct si) nothrow
  */
 extern (C) int rt_hasFinalizerInSegment(void* p, size_t size, void *context, scope const(void)[] segment) nothrow
 {
-    // if the context is not-null, then this is a struct typeinfo
+    bool checkStructTI(TypeInfo ti)
+    {
+        if (typeid(ti) is typeid(TypeInfo_Struct))
+        {
+            auto sti = cast(TypeInfo_Struct) cast(void*) ti;
+            return cast(size_t)(cast(void*)sti.xdtor - segment.ptr) < segment.length;
+        }
+        if (typeid(ti) is typeid(TypeInfo_StaticArray))
+            return checkStructTI(ti.next);
+        return false;
+    }
+
+    // if the context is not-null, then this is a struct or AA typeinfo
     if (context)
     {
-        auto ti = cast(TypeInfo_Struct)context;
-        return cast(size_t)(cast(void*)ti.xdtor - segment.ptr) < segment.length;
+        auto ti = cast(TypeInfo)context;
+        if (typeid(ti) is typeid(TypeInfo_AssociativeArray))
+        {
+            // this is an AA element. It's in here because we need to run a
+            // dtor at least one of the key or value.
+            auto tiaa = cast(TypeInfo_AssociativeArray) context;
+            return checkStructTI(unqualify(tiaa.key)) || checkStructTI(unqualify(tiaa.value));
+        }
+        return checkStructTI(ti);
     }
 
     // otherwise class, finalizer is in the block itself.
@@ -794,7 +813,15 @@ extern (C) void rt_finalizeFromGC(void* p, size_t size, uint attr, void *context
 {
     // to verify: reset memory necessary?
     if (!context)
-        rt_finalize2(p, false, false); // class
+        return rt_finalize2(p, false, false); // class
+
+    auto ti = cast(TypeInfo) context;
+    if (typeid(ti) is typeid(TypeInfo_AssociativeArray))
+    {
+        // AA entry.
+        import rt.aaA : finalizeEntry;
+        finalizeEntry(p, cast(TypeInfo_AssociativeArray)context);
+    }
     else if (attr & BlkAttr.APPENDABLE)
         finalize_array2(p, size, cast(TypeInfo_Struct)context); // array of structs
     else
@@ -1670,16 +1697,13 @@ deprecated unittest
     GC.free(blkinf.base);
 
     // associative arrays
-    import rt.aaA : entryDtor;
-    // throw away all existing AA entries with dtor
-    GC.runFinalizers((cast(char*)(&entryDtor))[0..1]);
 
     S1[int] aa1;
     aa1[0] = S1(0);
     aa1[1] = S1(1);
     dtorCount = 0;
     aa1 = null;
-    GC.runFinalizers((cast(char*)(&entryDtor))[0..1]);
+    GC.runFinalizers((cast(char*)(typeid(S1).xdtor))[0..1]);
     assert(dtorCount == 2);
 
     int[S1] aa2;
@@ -1688,7 +1712,7 @@ deprecated unittest
     aa2[S1(2)] = 2;
     dtorCount = 0;
     aa2 = null;
-    GC.runFinalizers((cast(char*)(&entryDtor))[0..1]);
+    GC.runFinalizers((cast(char*)(typeid(S1).xdtor))[0..1]);
     assert(dtorCount == 3);
 
     S1[2][int] aa3;
@@ -1696,7 +1720,7 @@ deprecated unittest
     aa3[1] = [S1(1),S1(3)];
     dtorCount = 0;
     aa3 = null;
-    GC.runFinalizers((cast(char*)(&entryDtor))[0..1]);
+    GC.runFinalizers((cast(char*)(typeid(S1).xdtor))[0..1]);
     assert(dtorCount == 4);
 }
 
