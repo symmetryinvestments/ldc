@@ -40,7 +40,8 @@ private void setupContextAndBitmap(uint bits, const TypeInfo ti, ref const(void)
 {
     if (ti !is null)
     {
-        context = (bits & BlkAttr.STRUCTFINAL) ? cast(void *)ti : null;
+        if (bits & BlkAttr.FINALIZE)
+            context = (typeid(ti) is typeid(TypeInfo_Class)) ? null : cast(void *)ti;
         ptrBitmap = cast(immutable size_t *)rtinfoHasPointers;
         // No precise scanning for now, it is not worth paying the price of a
         // possible cache-busting virtual call.
