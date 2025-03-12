@@ -32,8 +32,13 @@ private:
   IndirectByvalRewrite indirectByvalRewrite;
   ArgTypesRewrite argTypesRewrite;
 
+  bool hasAAPCS64VaList() {
+    return !isDarwin() &&
+           !global.params.targetTriple->isWindowsMSVCEnvironment();
+  }
+
   bool isAAPCS64VaList(Type *t) {
-    if (isDarwin())
+    if (!hasAAPCS64VaList())
       return false;
 
     // look for a __va_list struct in a `std` C++ namespace
@@ -53,10 +58,6 @@ public:
   AArch64TargetABI() {}
 
   bool returnInArg(TypeFunction *tf, bool) override {
-    if (tf->isref()) {
-      return false;
-    }
-
     Type *rt = tf->next->toBasetype();
     if (rt->ty == TY::Tstruct || rt->ty == TY::Tsarray) {
       auto argTypes = getArgTypes(rt);
@@ -84,14 +85,7 @@ public:
   bool passByVal(TypeFunction *, Type *) override { return false; }
 
   void rewriteFunctionType(IrFuncTy &fty) override {
-    if (!skipReturnValueRewrite(fty)) {
-      rewriteArgument(fty, *fty.ret, /*isReturnVal=*/true);
-    }
-
-    for (auto arg : fty.args) {
-      if (!arg->byref)
-        rewriteArgument(fty, *arg, /*isReturnVal=*/false);
-    }
+    TargetABI::rewriteFunctionType(fty);
 
     // remove 0-sized args (static arrays with 0 elements) and, for Darwin,
     // empty POD structs too
@@ -122,14 +116,12 @@ public:
   }
 
   void rewriteArgument(IrFuncTy &fty, IrFuncTyArg &arg) override {
-    return rewriteArgument(fty, arg, /*isReturnVal=*/false);
-  }
-
-  void rewriteArgument(IrFuncTy &fty, IrFuncTyArg &arg, bool isReturnVal) {
     Type *t = arg.type->toBasetype();
 
     if (!isAggregate(t))
       return;
+
+    const bool isReturnVal = &arg == fty.ret;
 
     // compiler magic: pass va_list args implicitly by reference
     if (!isReturnVal && isAAPCS64VaList(t)) {
@@ -165,7 +157,7 @@ public:
   }
 
   Type *vaListType() override {
-    if (isDarwin())
+    if (!hasAAPCS64VaList())
       return TargetABI::vaListType(); // char*
 
     // We need to pass the actual va_list type for correct mangling. Simply

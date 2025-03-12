@@ -391,15 +391,35 @@ void registerModuleInfo(Module *m) {
 
 void addModuleFlags(llvm::Module &m) {
   const auto ModuleMinFlag = llvm::Module::Min;
+  const auto ConstantOne =
+      llvm::ConstantInt::get(LLType::getInt32Ty(m.getContext()), 1);
+  const auto ConstantOneMetadata = llvm::ConstantAsMetadata::get(ConstantOne);
 
   if (opts::fCFProtection == opts::CFProtectionType::Return ||
       opts::fCFProtection == opts::CFProtectionType::Full) {
-    m.addModuleFlag(ModuleMinFlag, "cf-protection-return", 1);
+    m.setModuleFlag(ModuleMinFlag, "cf-protection-return", ConstantOneMetadata);
   }
 
   if (opts::fCFProtection == opts::CFProtectionType::Branch ||
       opts::fCFProtection == opts::CFProtectionType::Full) {
-    m.addModuleFlag(ModuleMinFlag, "cf-protection-branch", 1);
+    m.setModuleFlag(ModuleMinFlag, "cf-protection-branch", ConstantOneMetadata);
+  }
+
+  // Target specific flags
+  const auto ModuleErrFlag = llvm::Module::Error;
+  switch (global.params.targetTriple->getArch()) {
+  case llvm::Triple::ppc64:
+  case llvm::Triple::ppc64le:
+    if (target.RealProperties.mant_dig == 113) {
+      const auto ConstantIEEE128String = llvm::MDString::get(gIR->context(), "ieeequad");
+      m.setModuleFlag(ModuleErrFlag, "float-abi", ConstantIEEE128String);
+    } else if (target.RealProperties.mant_dig == 106) {
+      const auto ConstantIBM128String = llvm::MDString::get(gIR->context(), "doubledouble");
+      m.setModuleFlag(ModuleErrFlag, "float-abi", ConstantIBM128String);
+    }
+    break;
+  default:
+    break;
   }
 }
 

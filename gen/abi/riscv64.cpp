@@ -163,63 +163,43 @@ public:
     return pointerTo(Type::tvoid);
   }
   bool returnInArg(TypeFunction *tf, bool) override {
-    if (tf->isref()) {
-      return false;
-    }
     Type *rt = tf->next->toBasetype();
-    if (!size(rt))
-      return false;
-    if (!isPOD(rt))
-      return true;
-    return size(rt) > 16;
+    return !isPOD(rt) || size(rt) > 16;
   }
   bool passByVal(TypeFunction *, Type *t) override {
-    if (!size(t))
-      return false;
-    if (t->toBasetype()->ty == TY::Tcomplex80) {
+    t = t->toBasetype();
+    if (t->ty == TY::Tcomplex80) {
       // rewrite it later to bypass the RVal problem
       return false;
     }
-    return size(t) > 16;
+    return isPOD(t) && size(t) > 16;
   }
-  void rewriteFunctionType(IrFuncTy &fty) override {
-    if (!fty.ret->byref) {
-      if (!skipReturnValueRewrite(fty)) {
-        if (!fty.ret->byref && isPOD(fty.ret->type) &&
-            requireHardfloatRewrite(fty.ret->type)) {
-          // rewrite here because we should not apply this to variadic arguments
-          hardfloatRewrite.applyTo(*fty.ret);
-        } else {
-          rewriteArgument(fty, *fty.ret);
-        }
-      }
-    }
 
-    for (auto arg : fty.args) {
-      if (!arg->byref && isPOD(arg->type) &&
-          requireHardfloatRewrite(arg->type)) {
-        // rewrite here because we should not apply this to variadic arguments
-        hardfloatRewrite.applyTo(*arg);
-      } else {
-        rewriteArgument(fty, *arg);
-      }
+  void rewriteVarargs(IrFuncTy &fty,
+                      std::vector<IrFuncTyArg *> &args) override {
+    for (auto arg : args) {
+      if (!arg->byref)
+        rewriteArgument(fty, *arg, /*isVararg=*/true);
     }
   }
 
   void rewriteArgument(IrFuncTy &fty, IrFuncTyArg &arg) override {
-    if (arg.byref) {
+    rewriteArgument(fty, arg, /*isVararg=*/false);
+  }
+
+  void rewriteArgument(IrFuncTy &fty, IrFuncTyArg &arg, bool isVararg) {
+    TargetABI::rewriteArgument(fty, arg);
+    if (arg.rewrite)
+      return;
+
+    if (!isVararg && requireHardfloatRewrite(arg.type)) {
+      hardfloatRewrite.applyTo(arg);
       return;
     }
 
     Type *ty = arg.type->toBasetype();
     if (ty->ty == TY::Tcomplex80) {
       // {real, real} should be passed in memory
-      indirectByvalRewrite.applyTo(arg);
-      return;
-    }
-
-    if (!isPOD(arg.type)) {
-      // non-PODs should be passed in memory
       indirectByvalRewrite.applyTo(arg);
       return;
     }

@@ -117,7 +117,7 @@ include(GetLinuxDistribution)
 #
 
 # Version information
-set(LDC_VERSION "1.40.0") # May be overridden by git hash tag
+set(LDC_VERSION "1.40.1") # May be overridden by git hash tag
 set(DMDFE_MAJOR_VERSION   2)
 set(DMDFE_MINOR_VERSION   110)
 set(DMDFE_PATCH_VERSION   0)
@@ -275,10 +275,6 @@ if( CMAKE_COMPILER_IS_GNUCXX
     AND CMAKE_C_COMPILER_VERSION VERSION_LESS "4.6.0" )
     append("-mminimal-toc" LDC_CXXFLAGS)
 endif()
-# Do not use doubledouble on ppc
-if( CMAKE_SYSTEM_PROCESSOR MATCHES "ppc|powerpc")
-    append("-mlong-double-64" LDC_CXXFLAGS)
-endif()
 if(UNIX)
     append("-DLDC_POSIX" LDC_CXXFLAGS)
 endif()
@@ -313,6 +309,12 @@ if(MSVC)
     endif()
 else()
     separate_arguments(LLVM_LDFLAGS UNIX_COMMAND "${LLVM_LDFLAGS}")
+endif()
+
+option(LDC_FULLY_STATIC "Posix: Link most executables (compiler and tools) as fully-static binaries" OFF)
+set(FULLY_STATIC_LDFLAG)
+if(UNIX AND LDC_FULLY_STATIC)
+    set(FULLY_STATIC_LDFLAG "-static")
 endif()
 
 # Suppress superfluous randlib warnings about "*.a" having no symbols on MacOSX.
@@ -452,20 +454,33 @@ include(HandleLTOPGOBuildOptions)
 #
 # Enable Dynamic compilation if supported for this platform and LLVM version.
 #
-set(LDC_DYNAMIC_COMPILE "AUTO" CACHE STRING "Support dynamic compilation (ON|OFF). Enabled by default; not supported for LLVM >= 12.")
+set(LDC_DYNAMIC_COMPILE "AUTO" CACHE STRING "Support dynamic compilation (ON|OFF). Enabled by default; not supported for LLVM < 18.")
 option(LDC_DYNAMIC_COMPILE_USE_CUSTOM_PASSES "Use custom LDC passes in jit" ON)
 if(LDC_DYNAMIC_COMPILE STREQUAL "AUTO")
-    if(LDC_LLVM_VER LESS 1200)
-        set(LDC_DYNAMIC_COMPILE ON)
-    else()
-        # TODO: port from ORCv1 API (dropped with LLVM 12) to ORCv2 (added with LLVM 7)
+    if(LDC_LLVM_VER LESS 1800)
         set(LDC_DYNAMIC_COMPILE OFF)
+    else()
+        set(LDC_DYNAMIC_COMPILE ON)
     endif()
 endif()
+# https://llvm.org/docs/JITLink.html for the list of supported platforms
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|x64|amd64|aarch64|arm64|riscv64|loongarch64")
+    set(_LDC_DYNAMIC_COMPILE_USE_LLVM_JITLINK_DEFAULT ON)
+else()
+    set(_LDC_DYNAMIC_COMPILE_USE_LLVM_JITLINK_DEFAULT OFF)
+endif()
+# Disable LLVM JITLink on Windows for now, currently does not work very well on Windows
+if(WIN32)
+    set(_LDC_DYNAMIC_COMPILE_USE_LLVM_JITLINK_DEFAULT OFF)
+endif()
+option(LDC_DYNAMIC_COMPILE_USE_LLVM_JITLINK "Use the experimental but faster LLVM JITLink dynamic code linker" "${_LDC_DYNAMIC_COMPILE_USE_LLVM_JITLINK_DEFAULT}")
 message(STATUS "-- Building LDC with dynamic compilation support (LDC_DYNAMIC_COMPILE): ${LDC_DYNAMIC_COMPILE}")
 if(LDC_DYNAMIC_COMPILE)
     add_definitions(-DLDC_DYNAMIC_COMPILE)
-    add_definitions(-DLDC_DYNAMIC_COMPILE_API_VERSION=3)
+    add_definitions(-DLDC_DYNAMIC_COMPILE_API_VERSION=4)
+endif()
+if (LDC_DYNAMIC_COMPILE_USE_LLVM_JITLINK)
+    add_compile_definitions(LDC_JITRT_USE_JITLINK)
 endif()
 
 #
@@ -545,7 +560,7 @@ else()
         # Define a 'HOST_D' CMake linker language for the static LDCShared
         # library, using the host ldmd2 compiler ≥ v1.5 as archiver, which
         # supports LTO objects and cross-archiving.
-        set(CMAKE_HOST_D_CREATE_STATIC_LIBRARY "${D_COMPILER} -lib ${D_COMPILER_FLAGS} ${DFLAGS_BASE} -of=<TARGET> <OBJECTS>")
+        set(CMAKE_HOST_D_CREATE_STATIC_LIBRARY "\"${D_COMPILER}\" -lib ${D_COMPILER_FLAGS} ${DFLAGS_BASE} -of=<TARGET> <OBJECTS>")
         set(LDC_LIB_LANGUAGE HOST_D)
     endif()
 endif()
@@ -695,7 +710,7 @@ build_d_executable(
     "${LDC_EXE_FULL}"
     "${LDC_D_SOURCE_FILES}"
     "${DFLAGS_BUILD_TYPE} ${DFLAGS_LDC}"
-    "${ALTERNATIVE_MALLOC_O};${LDC_LINKERFLAG_LIST}"
+    "${ALTERNATIVE_MALLOC_O};${LDC_LINKERFLAG_LIST};${FULLY_STATIC_LDFLAG}"
     "${FE_RES}"
     "${LDC_LIB}"
     ${COMPILE_D_MODULES_SEPARATELY}
@@ -730,7 +745,7 @@ build_d_executable(
     "${LDMD_EXE_FULL}"
     "${LDMD_D_SOURCE_FILES}"
     "${DFLAGS_BUILD_TYPE}"
-    "${LDC_LINKERFLAG_LIST}"
+    "${LDC_LINKERFLAG_LIST};${FULLY_STATIC_LDFLAG}"
     ""
     "LDMD_CXX_LIB"
     ${COMPILE_D_MODULES_SEPARATELY}
@@ -914,7 +929,7 @@ build_d_executable(
     "${LDC_UNITTEST_EXE_FULL}"
     "${LDC_D_SOURCE_FILES}"
     "-g -unittest ${DFLAGS_LDC}"
-    "${LDC_LINKERFLAG_LIST}"
+    "${LDC_LINKERFLAG_LIST};${FULLY_STATIC_LDFLAG}"
     ""
     "${LDC_LIB}"
     ${COMPILE_D_MODULES_SEPARATELY}
@@ -944,7 +959,7 @@ build_d_executable(
     "${LDC_BUILD_RUNTIME_EXE_FULL}"
     "${PROJECT_BINARY_DIR}/ldc-build-runtime.d"
     "${DFLAGS_BUILD_TYPE}"
-    ""
+    "" # must not be fully static for std.net.curl support (loading libcurl dynamically)
     "${PROJECT_SOURCE_DIR}/runtime/ldc-build-runtime.d.in"
     ""
     ${COMPILE_D_MODULES_SEPARATELY}

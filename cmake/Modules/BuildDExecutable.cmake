@@ -48,9 +48,10 @@ function(build_d_executable target_name output_exe d_src_files compiler_args lin
         endif()
         add_custom_command(
             OUTPUT ${object_file}
-            COMMAND ${D_COMPILER} -c ${dflags} -of${object_file} ${d_src_files}
+            COMMAND "${D_COMPILER}" -c ${dflags} -of${object_file} ${d_src_files}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
             DEPENDS ${d_src_files} ${extra_compile_deps}
+            VERBATIM
         )
         set(object_files ${object_file})
     else()
@@ -62,9 +63,10 @@ function(build_d_executable target_name output_exe d_src_files compiler_args lin
             set(object_file ${PROJECT_BINARY_DIR}/obj/${target_name}/${object_file}${CMAKE_CXX_OUTPUT_EXTENSION})
             add_custom_command(
                 OUTPUT ${object_file}
-                COMMAND ${D_COMPILER} -c ${dflags} -of${object_file} ${f}
+                COMMAND "${D_COMPILER}" -c ${dflags} -of${object_file} ${f}
                 WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
                 DEPENDS ${f} ${extra_compile_deps}
+                VERBATIM
             )
             list(APPEND object_files ${object_file})
         endforeach()
@@ -93,7 +95,7 @@ function(build_d_executable target_name output_exe d_src_files compiler_args lin
             list(APPEND dep_libs "-L$<TARGET_LINKER_FILE:${l}>")
         endforeach()
 
-        set(full_linker_args ${CMAKE_EXE_LINKER_FLAGS} ${linker_args})
+        set(full_linker_args ${CMAKE_EXE_LINKER_FLAGS} ${linker_args} ${D_LINKER_ARGS})
         translate_linker_args(full_linker_args translated_linker_args)
 
         # We need to link against the C++ runtime library.
@@ -108,9 +110,10 @@ function(build_d_executable target_name output_exe d_src_files compiler_args lin
 
         add_custom_command(
             OUTPUT ${output_exe}
-            COMMAND ${D_COMPILER} ${dflags} -of${output_exe} ${objects_args} ${dep_libs} ${translated_linker_args}
+            COMMAND "${D_COMPILER}" ${dflags} -of${output_exe} ${objects_args} ${dep_libs} ${translated_linker_args}
             WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
             DEPENDS ${target_name}_d_objects ${object_files} ${link_deps}
+            VERBATIM
         )
         add_custom_target(${target_name} ALL DEPENDS ${output_exe})
     endif()

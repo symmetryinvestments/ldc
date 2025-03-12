@@ -895,10 +895,12 @@ void DtoVarDeclaration(VarDeclaration *vd) {
 
     Type *type = isSpecialRefVar(vd) ? pointerTo(vd->type) : vd->type;
 
+    // We also allocate a variable for zero-sized variables, because they are technically not `null` when loaded.
+    // The x86_64 ABI "loads" zero-sized function arguments, and without an allocation ASan will report an error (Github #4816).
     llvm::Value *allocainst;
     bool isRealAlloca = false;
     LLType *lltype = DtoType(type); // void for noreturn
-    if (lltype->isVoidTy() || gDataLayout->getTypeSizeInBits(lltype) == 0) {
+    if (lltype->isVoidTy()) {
       allocainst = getNullPtr();
     } else if (type != vd->type) {
       allocainst = DtoAlloca(type, vd->toChars());
@@ -1488,13 +1490,6 @@ DValue *DtoSymbolAddress(const Loc &loc, Type *type, Declaration *decl) {
       Logger::println("TypeInfoDeclaration");
       LLValue *m = DtoResolveTypeInfo(tid);
       return new DImValue(type, m);
-    }
-    // special vtbl symbol, used by LDC as alias to the actual vtbl (with
-    // different type and mangled name)
-    if (vd->isClassMember() && vd == vd->isClassMember()->vtblsym) {
-      Logger::println("vtbl symbol");
-      auto cd = vd->isClassMember();
-      return new DLValue(type, getIrAggr(cd)->getVtblSymbol());
     }
     // nested variable
     if (vd->nestedrefs.length) {

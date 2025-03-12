@@ -57,20 +57,9 @@ struct WasmTargetABI : TargetABI {
            DtoAlignment(t) <= DtoAlignment(singleWrappedScalarType);
   }
 
-  bool returnInArg(TypeFunction *tf, bool) override {
-    if (tf->isref()) {
-      return false;
-    }
-
-    Type *rt = tf->next->toBasetype();
-    return passByVal(tf, rt);
-  }
-
   bool passByVal(TypeFunction *, Type *t) override {
-    return DtoIsInMemoryOnly(t) && !isDirectlyPassedAggregate(t);
+    return DtoIsInMemoryOnly(t) && isPOD(t) && !isDirectlyPassedAggregate(t);
   }
-
-  void rewriteFunctionType(IrFuncTy &) override {}
 };
 
 // The public getter for abi.cpp.
