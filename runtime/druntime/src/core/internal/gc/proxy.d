@@ -275,7 +275,7 @@ extern (C)
         return instance.shrinkArrayUsed( slice, existingUsed, atomic );
     }
 
-    GC gc_getProxy() nothrow
+    GC gc_getProxy() nothrow @nogc
     {
         return instance;
     }

@@ -1638,6 +1638,14 @@ class ConservativeGC : GC
 
         return existingCapacity - offset;
     }
+
+    void initThread(ThreadBase t) nothrow @nogc { }
+
+    void cleanupThread(ThreadBase t) nothrow @nogc
+    {
+        cleanupBlkCache(t.tlsGCData);
+        t.tlsGCData = null;
+    }
 }
 
 
