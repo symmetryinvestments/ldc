@@ -37,15 +37,13 @@ runs:
         # Make sure to link libzstd statically
         sudo rm /usr/lib/$arch-linux-gnu/libzstd.so
 
-        # Install a more recent CMake version in the AArch64 container (for mimalloc...)
-        if [[ $arch == aarch64 ]]; then
-          curl -fL --retry 3 --max-time 300 -o cmake.tar.gz \
-            https://github.com/Kitware/CMake/releases/download/v3.31.4/cmake-3.31.4-linux-$arch.tar.gz
-          mkdir cmake
-          tar -xf cmake.tar.gz --strip 1 -C cmake
-          rm cmake.tar.gz
-          sudo ln -sf $PWD/cmake/bin/cmake /usr/bin/cmake
-        fi
+        # Install a more recent CMake version in the Ubuntu 20 container (for mimalloc...)
+        curl -fL --retry 3 --max-time 300 -o cmake.tar.gz \
+          https://github.com/Kitware/CMake/releases/download/v3.31.4/cmake-3.31.4-linux-$arch.tar.gz
+        mkdir cmake
+        tar -xf cmake.tar.gz --strip 1 -C cmake
+        rm cmake.tar.gz
+        sudo ln -sf $PWD/cmake/bin/cmake /usr/bin/cmake
 
     - name: 'Linux: Install clang 19 from apt.llvm.org'
       if: runner.os == 'Linux'
@@ -193,3 +191,19 @@ runs:
         echo "CFLAGS=-m32" >> $GITHUB_ENV
         echo "CXXFLAGS=-m32" >> $GITHUB_ENV
         echo "ASMFLAGS=-m32" >> $GITHUB_ENV
+
+    - name: 'Linux: Build SDC libdmdalloc.a'
+      if: runner.os == 'Linux' && inputs.arch == 'x86_64'
+      shell: bash
+      run: |
+        set -euxo pipefail
+
+        export DEBIAN_FRONTEND=noninteractive
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        echo 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-19 main' | sudo tee /etc/apt/sources.list.d/llvm.list
+        sudo apt-get -qq update
+        sudo apt-get install -qq llvm-19-dev lld-19 nasm
+        sudo ln -sf lld-19 /usr/bin/ld.lld # so that the SDC Makefile detects it
+
+        LLVM_CONFIG=llvm-config-19 DMD=ldmd2 SDFLAGS=-O3 make -C runtime/sdc -j$(nproc) lib/libdmdalloc.a
+        ls -l runtime/sdc/lib/libdmdalloc.a

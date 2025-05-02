@@ -21,6 +21,9 @@ runs:
         fi
         installed/bin/ldc2 hello.d -link-defaultlib-shared
         ./hello
+        if [[ '${{ runner.os }}' == Linux ]]; then
+          DRT_GCOPT="gc:sdc" ./hello
+        fi
         if [[ -d installed/lib32 ]]; then
           installed/bin/ldc2 hello.d -m32 -link-defaultlib-shared
           ./hello

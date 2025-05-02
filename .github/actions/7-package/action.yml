@@ -154,6 +154,9 @@ runs:
       shell: bash
       run: |
         set -eux
+        # work around 'dubious ownership' git errors in container before cleaning
+        git config --global --add safe.directory $PWD
+        git submodule foreach 'git config --global --add safe.directory $PWD'
         git clean -dffx
         git submodule foreach git clean -dffx
         cd ..
