@@ -192,3 +192,11 @@ runs:
         echo "CFLAGS=-m32" >> $GITHUB_ENV
         echo "CXXFLAGS=-m32" >> $GITHUB_ENV
         echo "ASMFLAGS=-m32" >> $GITHUB_ENV
+
+    - name: 'Linux x86_64: Build symgc'
+      if: runner.os == 'Linux' && inputs.arch == 'x86_64'
+      shell: bash
+      run: |
+        set -eux
+        DFLAGS="-singleobj -g" dub build --root=runtime/symgc --build=release-nobounds
+        ls -l runtime/symgc/libsymgc.a
