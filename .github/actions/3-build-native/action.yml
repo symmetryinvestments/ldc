@@ -23,7 +23,7 @@ runs:
         fi
         cd runtime/symgc
         # FIXME: hitting LLVM assertion with -g
-        DFLAGS="-O -gline-tables-only -singleobj" dub build -v --compiler=$PWD/../../../bootstrap-ldc/bin/ldc2
+        DFLAGS="-O -g -singleobj" dub build -v --compiler=$PWD/../../../bootstrap-ldc/bin/ldc2
         ls -l libsymgc.a
         # extract single object file as symgc.o
         ar x libsymgc.a

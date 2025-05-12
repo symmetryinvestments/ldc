@@ -78,15 +78,9 @@ runs:
 
         arch='${{ inputs.arch }}'
 
-        # use assertions for untagged builds
-        assertsSuffix="-withAsserts"
-        if [[ '${{ github.ref }}' = refs/tags/* ]]; then
-          assertsSuffix=""
-        fi
-
         if [[ '${{ runner.os }}' == Windows ]]; then
           curl -fL --retry 3 --max-time 300 -o llvm.7z \
-            https://github.com/ldc-developers/llvm-project/releases/download/$tag/llvm-$version-windows-$arch$assertsSuffix.7z
+            https://github.com/ldc-developers/llvm-project/releases/download/$tag/llvm-$version-windows-$arch.7z
           mkdir llvm
           cd llvm
           7z x ../llvm.7z >/dev/null
@@ -99,7 +93,7 @@ runs:
             os=osx
           fi
           curl -fL --retry 3 --max-time 300 -o llvm.tar.xz \
-            https://github.com/ldc-developers/llvm-project/releases/download/$tag/llvm-$version-$os-$arch$assertsSuffix.tar.xz
+            https://github.com/ldc-developers/llvm-project/releases/download/$tag/llvm-$version-$os-$arch.tar.xz
           mkdir llvm
           tar -xf llvm.tar.xz --strip 1 -C llvm
           rm llvm.tar.xz
