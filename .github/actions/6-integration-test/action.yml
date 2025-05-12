@@ -8,7 +8,7 @@ runs:
 
     - name: Generate hello.d
       shell: bash
-      run: echo 'void main() { import std.stdio; writefln("Hello world, %d bits", size_t.sizeof * 8); }' > ../hello.d
+      run: echo 'void main() { import std.stdio; writefln("Hello world, %d bits", size_t.sizeof * 8); auto dummyAlloc = new int; }' > ../hello.d
 
     - name: Run hello-world integration test with shared libs
       shell: bash
@@ -22,6 +22,8 @@ runs:
         installed/bin/ldc2 hello.d -link-defaultlib-shared
         ./hello
         if [[ -f ${{ github.workspace }}/runtime/symgc/symgc.o ]]; then
+          ./hello --DRT-gcopt="gc:sdc"
+          installed/bin/ldc2 hello.d
           ./hello --DRT-gcopt="gc:sdc"
         fi
         if [[ -d installed/lib32 ]]; then
