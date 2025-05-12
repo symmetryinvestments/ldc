@@ -573,7 +573,7 @@ macro(compile_druntime d_flags lib_suffix path_suffix emit_bc all_at_once single
        ${outlist_bc}
     )
     if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/symgc/symgc.o")
-        if((NOT CMAKE_CROSSCOMPILING) AND ("${TARGET_SYSTEM}" MATCHES "Linux") AND ("${path_suffix}" STREQUAL "${LIB_SUFFIX}"))
+        if("${path_suffix}" STREQUAL "${LIB_SUFFIX}") # not for 32-bit druntime with MULTILIB=ON
             list(APPEND ${outlist_o} ${CMAKE_CURRENT_SOURCE_DIR}/symgc/symgc.o)
         endif()
     endif()
