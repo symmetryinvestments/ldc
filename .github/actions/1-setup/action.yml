@@ -212,5 +212,10 @@ runs:
       shell: bash
       run: |
         set -eux
-        DFLAGS="-singleobj -g" dub build --root=runtime/symgc --build=release-nobounds
-        ls -l runtime/symgc/libsymgc.a
+        cd runtime/symgc
+        DFLAGS="-singleobj -g" dub build --build=release-nobounds
+        ls -l libsymgc.a
+        # extract single object file as symgc.o
+        ar x libsymgc.a
+        mv *.o symgc.o
+        ls -l symgc.o
