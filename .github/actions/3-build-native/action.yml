@@ -17,8 +17,13 @@ runs:
       shell: bash
       run: |
         set -eux
+        if ! type -P dub &>/dev/null; then
+          echo "No dub from host compiler in PATH (expected on Alpine), skipping symgc build."
+          exit 0
+        fi
         cd runtime/symgc
-        DFLAGS="-singleobj -g" dub build --compiler=$PWD/../../../bootstrap-ldc/bin/ldc2 --build=release-nobounds
+        # FIXME: hitting LLVM assertion with -g
+        DFLAGS="-O -gline-tables-only -singleobj" dub build -v --compiler=$PWD/../../../bootstrap-ldc/bin/ldc2
         ls -l libsymgc.a
         # extract single object file as symgc.o
         ar x libsymgc.a
