@@ -133,7 +133,7 @@ jobs:
           else
             # set up Alpine container
             apk add \
-              git cmake ninja-is-really-ninja g++ clang ldc lld llvm-dev llvm-static compiler-rt \
+              git cmake ninja-is-really-ninja g++ clang ldc dub lld llvm-dev llvm-static compiler-rt \
               libxml2-static zstd-static zlib-static \
               bash grep diffutils make curl 7zip perl
             # create missing 7za symlink
