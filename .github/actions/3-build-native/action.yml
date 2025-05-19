@@ -12,19 +12,28 @@ runs:
   using: composite
   steps:
 
-    - name: 'Linux x86_64: Build symgc'
-      if: runner.os == 'Linux' && inputs.arch == 'x86_64'
+    - name: 'Linux & Windows x86_64: Build symgc'
+      if: (runner.os == 'Linux' && inputs.arch == 'x86_64') || (runner.os == 'Windows' && inputs.arch == 'x64')
       shell: bash
       run: |
         set -eux
         cd runtime/symgc
         # FIXME: hitting LLVM assertion with -g
         DFLAGS="-O -g -singleobj -linkonce-templates" dub build -v --compiler=$PWD/../../../bootstrap-ldc/bin/ldc2
-        ls -l libsymgc.a
-        # extract single object file as symgc.o
-        ar x libsymgc.a
-        mv *.o symgc.o
-        ls -l symgc.o
+        # extract single object file as symgc.o[bj]
+        if [[ '${{ runner.os }}' == Linux ]]; then
+          ls -l libsymgc.a
+          ar x libsymgc.a
+          mv *.o symgc.o
+          ls -l symgc.o
+        else
+          ls -l symgc.lib
+          #obj=$(lib.exe /nologo /list symgc.lib)
+          #lib.exe /nologo symgc.lib /extract:"$obj" /out:symgc.obj
+          llvm-ar x symgc.lib
+          mv *.obj symgc.obj
+          ls -l symgc.obj
+        fi
 
     - name: 'Posix: Build mimalloc'
       if: runner.os != 'Windows'

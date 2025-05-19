@@ -14,6 +14,10 @@ runs:
       shell: bash
       run: |
         set -eux
+        symgc=0
+        if [[ -f runtime/symgc/symgc.o || -f runtime/symgc/symgc.obj ]]; then
+          symgc=1
+        fi
         cd ..
         if [[ '${{ runner.os }}' == Windows ]]; then
           # add druntime/Phobos DLL dir to PATH
@@ -21,7 +25,7 @@ runs:
         fi
         installed/bin/ldc2 hello.d -link-defaultlib-shared
         ./hello
-        if [[ -f ${{ github.workspace }}/runtime/symgc/symgc.o ]]; then
+        if [[ $symgc == 1 ]]; then
           ./hello --DRT-gcopt="gc:sdc"
           installed/bin/ldc2 hello.d
           ./hello --DRT-gcopt="gc:sdc"
