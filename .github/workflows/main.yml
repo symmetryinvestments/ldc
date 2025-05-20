@@ -6,7 +6,7 @@ on:
   push:
     branches-ignore:
       - 'merge-*' # don't run on pushes to merge-X.Y.Z branches, they are usually PRs
-      - symgc
+      - 'symgc*'
     tags: # explicitly needed to run for all tags, due to the branches filter above
       - '**'
 
