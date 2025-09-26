@@ -17,6 +17,7 @@ concurrency:
 env:
   LLVM_VERSION: 22.1.8
   CLANG_MAJOR: 22
+  DRT_GCOPT: gc:conservative
 
 jobs:
   build-native:

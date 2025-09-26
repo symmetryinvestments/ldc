@@ -1,5 +1,6 @@
 import core.memory;
 
+extern(C) __gshared bool rt_envvars_enabled = false;
 extern(C) __gshared string[] rt_options = [ "gcopt=gc:unknowngc" ];
 
 void main()
