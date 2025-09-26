@@ -16,6 +16,7 @@ concurrency:
 
 env:
   LLVM_VERSION: 20.1.5
+  DRT_GCOPT: gc:conservative
 
 jobs:
   build-native:
