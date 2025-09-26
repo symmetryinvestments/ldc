@@ -19,7 +19,10 @@ struct Config
     bool disable;            // start disabled
     bool fork = false;       // optional concurrent behaviour
     ubyte profile;           // enable profiling with summary when terminating program
-    string gc = "conservative"; // select gc implementation conservative|precise|manual
+    version (With_symgc)
+        string gc = "sdcq"; // pick the symgc in quiet mode by default.
+    else
+        string gc = "conservative"; // select gc implementation conservative|precise|manual
 
     @MemVal size_t initReserve;      // initial reserve (bytes)
     @MemVal size_t minPoolSize = 1  << 20;  // initial and minimum pool size (bytes)
@@ -56,7 +59,7 @@ struct Config
         auto _minPoolSize = minPoolSize.bytes2prettyStruct;
         auto _maxPoolSize = maxPoolSize.bytes2prettyStruct;
         auto _incPoolSize = incPoolSize.bytes2prettyStruct;
-        printf(" - select gc implementation (default = conservative)
+        printf(" - select gc implementation (default = %.*s)
 
     initReserve:N  - initial memory to reserve in MB (%lld%c)
     minPoolSize:N  - initial and minimum pool size in MB (%lld%c)
@@ -68,6 +71,7 @@ struct Config
 
     Memory-related values can use B, K, M or G suffixes.
 ".ptr,
+               cast(int)gc.length, gc.ptr,
                _initReserve.v, _initReserve.u,
                _minPoolSize.v, _minPoolSize.u,
                _maxPoolSize.v, _maxPoolSize.u,
