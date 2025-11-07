@@ -1612,7 +1612,7 @@ in (fn)
             }}
             asm pure nothrow @nogc {
                 ("sd $gp, %0") : "=m" (regs[8]);
-                ("sd $fp, %0") : "=m" (regs[9]); 
+                ("sd $fp, %0") : "=m" (regs[9]);
                 ("sd $ra, %0") : "=m" (sp);
             }
         }
@@ -2446,6 +2446,10 @@ version (Windows)
 
             scope (exit)
             {
+                // allow the GC to clean up any resources it allocated for this thread.
+                import core.internal.gc.proxy : gc_getProxy;
+                gc_getProxy().cleanupThread(obj);
+
                 Thread.remove(obj);
                 obj.destroyDataStorage();
             }
@@ -2547,6 +2551,10 @@ else version (Posix)
 
             scope (exit)
             {
+                // allow the GC to clean up any resources it allocated for this thread.
+                import core.internal.gc.proxy : gc_getProxy;
+                gc_getProxy().cleanupThread(obj);
+
                 Thread.remove(obj);
                 atomicStore!(MemoryOrder.raw)(obj.m_isRunning, false);
                 obj.destroyDataStorage();
