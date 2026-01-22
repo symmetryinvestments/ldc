@@ -6,6 +6,7 @@ on:
   push:
     branches-ignore:
       - 'merge-*' # don't run on pushes to merge-X.Y.Z branches, they are usually PRs
+      - 'symgc*'
     tags: # explicitly needed to run for all tags, due to the branches filter above
       - '**'
 
@@ -54,8 +55,8 @@ jobs:
         with:
           submodules: true
           fetch-depth: 50
-      - name: Install ninja
-        uses: symmetryinvestments/gha-setup-ninja@v2
+      # - name: Install ninja
+      #   uses: symmetryinvestments/gha-setup-ninja@v2
       - name: Install D host compiler
         uses: dlang-community/setup-dlang@v1
         with:

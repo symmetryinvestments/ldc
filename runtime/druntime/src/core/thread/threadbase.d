@@ -136,6 +136,10 @@ class ThreadBase
     package void tlsRTdataInit() nothrow @nogc
     {
         m_tlsrtdata = rt_tlsgc_init();
+
+        // Let the selected GC initialize anything it needs.
+        import core.internal.gc.proxy : gc_getProxy;
+        gc_getProxy().initThread(this);
     }
 
     package void initDataStorage() nothrow
