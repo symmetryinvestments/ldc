@@ -122,6 +122,7 @@ jobs:
     timeout-minutes: 90
     env:
       MACOSX_DEPLOYMENT_TARGET: ${{ matrix.arch == 'arm64' && '11.0' || '10.12' }}
+      DRT_GCOPT: 'gc:sdcq parallel:0' # enable new GC on all supported platforms
     steps:
       - name: 'Set up Linux container'
         if: matrix.container_image
