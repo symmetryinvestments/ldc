@@ -13,8 +13,8 @@ runs:
   steps:
 
     - name: 'Linux(aarch64/x86_64) & Windows(x86_64): Build symgc'
-      if: (runner.os == 'Linux' && (inputs.arch == 'x86_64' || inputs.arch == 'aarch64')) || (runner.os == 'Windows' && inputs.arch == 'x64')
-      shell: bash
+      if: (runner.os == 'Linux' && (inputs.arch == 'x86_64' || inputs.arch == 'aarch64') && !startsWith(env.GHA_BASH_SHELL, 'cpa.sh')) || (runner.os == 'Windows' && inputs.arch == 'x64')
+      shell: ${{ env.GHA_BASH_SHELL }}
       run: |
         set -eux
         cd runtime/symgc
