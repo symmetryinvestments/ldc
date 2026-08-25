@@ -1,3 +1,6 @@
 [submodule "phobos"]
 	path = runtime/phobos
 	url = https://github.com/ldc-developers/phobos.git
+[submodule "runtime/symgc"]
+	path = runtime/symgc
+	url = https://github.com/symmetryinvestments/symgc.git

@@ -8,12 +8,16 @@ runs:
 
     - name: Generate hello.d
       shell: ${{ env.GHA_BASH_SHELL }}
-      run: echo 'void main() { import std.stdio; writefln("Hello world, %d bits", size_t.sizeof * 8); }' > ../hello.d
+      run: echo 'void main() { import std.stdio; writefln("Hello world, %d bits", size_t.sizeof * 8); auto dummyAlloc = new int; }' > ../hello.d
 
     - name: Run hello-world integration test with shared libs
       shell: ${{ env.GHA_BASH_SHELL }}
       run: |
         set -eux
+        symgc=0
+        if [[ -f runtime/symgc/symgc.o || -f runtime/symgc/symgc.obj ]]; then
+          symgc=1
+        fi
         cd ..
         if [[ '${{ runner.os }}' == Windows ]]; then
           # add druntime/Phobos DLL dir to PATH
@@ -21,6 +25,12 @@ runs:
         fi
         installed/bin/ldc2 hello.d -link-defaultlib-shared
         ./hello
+        if [[ $symgc == 1 ]]; then
+          ./hello --DRT-gcopt="gc:sdc"
+          installed/bin/ldc2 hello.d
+          ./hello --DRT-gcopt="gc:sdc"
+          DRT_GCOPT="gc:sdc" ./hello
+        fi
         if [[ -d installed/lib32 ]]; then
           installed/bin/ldc2 hello.d -m32 -link-defaultlib-shared
           ./hello
