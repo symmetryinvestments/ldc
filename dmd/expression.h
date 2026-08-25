@@ -806,6 +806,11 @@ public:
     d_bool inDebugStatement;      // true if this was in a debug statement
     d_bool ignoreAttributes;      // don't enforce attributes (e.g. call @gc function in @nogc code)
     d_bool isUfcsRewrite;       // the first argument was pushed in here by a UFCS rewrite
+    d_bool fromOpAssignment;      // set when operator overload method call from assignment (2024 edition)
+#if IN_LLVM
+    d_bool isMustTail;            // If marked with pragma(musttail)
+#endif
+
     VarDeclaration *vthis2;     // container for multi-context
     Expression* loweredFrom;    // set if this is the result of a lowering
 
