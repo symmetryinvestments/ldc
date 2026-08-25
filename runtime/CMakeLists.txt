@@ -522,9 +522,13 @@ macro(compile_druntime d_flags lib_suffix path_suffix emit_bc all_at_once single
     else()
         set(single_obj_name "")
     endif()
+    set(symgc_version "")
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/symgc/symgc${CMAKE_C_OUTPUT_EXTENSION}" AND "${path_suffix}" STREQUAL "${LIB_SUFFIX}") # not for 32-bit druntime with MULTILIB=ON
+        set(symgc_version "-d-version=With_symgc")
+    endif()
     dc("${DRUNTIME_D}"
        "${RUNTIME_DIR}/src"
-       "-conf=;${d_flags};${DRUNTIME_EXTRA_FLAGS};-I${RUNTIME_DIR}/src"
+       "-conf=;${d_flags};${symgc_version};${DRUNTIME_EXTRA_FLAGS};-I${RUNTIME_DIR}/src"
        "${PROJECT_BINARY_DIR}/objects${target_suffix}"
        "${emit_bc}"
        "${all_at_once}"
@@ -532,6 +536,12 @@ macro(compile_druntime d_flags lib_suffix path_suffix emit_bc all_at_once single
        ${outlist_o}
        ${outlist_bc}
     )
+    if(symgc_version)
+        list(APPEND ${outlist_o} ${CMAKE_CURRENT_SOURCE_DIR}/symgc/symgc${CMAKE_C_OUTPUT_EXTENSION})
+        if(${emit_bc})
+            list(APPEND ${outlist_bc} ${CMAKE_CURRENT_SOURCE_DIR}/symgc/symgc${CMAKE_C_OUTPUT_EXTENSION})
+        endif()
+    endif()
 endmacro()
 
 # Sets up the targets for building the Phobos D object files, appending the

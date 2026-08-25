@@ -19,12 +19,21 @@ struct Config
     bool disable;            // start disabled
     bool fork = false;       // optional concurrent behaviour
     ubyte profile;           // enable profiling with summary when terminating program
-    string gc = "conservative"; // select gc implementation conservative|precise|manual
+    version (With_symgc)
+        string gc = "sdcq"; // pick the symgc in quiet mode by default.
+    else
+        string gc = "conservative"; // select gc implementation conservative|precise|manual
 
     @MemVal size_t initReserve;      // initial reserve (bytes)
     @MemVal size_t minPoolSize = 1  << 20;  // initial and minimum pool size (bytes)
     @MemVal size_t maxPoolSize = 64 << 20;  // maximum pool size (bytes)
     @MemVal size_t incPoolSize = 3  << 20;  // pool size increment (bytes)
+
+    // Limit under which the GC will try to keep its heap (bytes)
+    // The GC does this on a best effort basis, and exceeding this size
+    // might lead to a performance cliff.
+    @MemVal size_t heapSizeLimit = size_t.max;
+
     uint parallel = 99;      // number of additional threads for marking (limited by cpuid.threadsPerCPU-1)
     float heapSizeFactor = 2.0; // heap size to used memory ratio
     string cleanup = "collect"; // select gc cleanup method none|collect|finalize
@@ -56,7 +65,7 @@ struct Config
         auto _minPoolSize = minPoolSize.bytes2prettyStruct;
         auto _maxPoolSize = maxPoolSize.bytes2prettyStruct;
         auto _incPoolSize = incPoolSize.bytes2prettyStruct;
-        printf(" - select gc implementation (default = conservative)
+        printf(" - select gc implementation (default = %.*s)
 
     initReserve:N  - initial memory to reserve in MB (%lld%c)
     minPoolSize:N  - initial and minimum pool size in MB (%lld%c)
@@ -68,6 +77,7 @@ struct Config
 
     Memory-related values can use B, K, M or G suffixes.
 ".ptr,
+               cast(int)gc.length, gc.ptr,
                _initReserve.v, _initReserve.u,
                _minPoolSize.v, _minPoolSize.u,
                _maxPoolSize.v, _maxPoolSize.u,
