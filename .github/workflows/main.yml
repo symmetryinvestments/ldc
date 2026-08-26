@@ -150,7 +150,7 @@ jobs:
       image: ${{ matrix.container_image }}
       volumes: # needed for Alpine aarch64 job: https://github.com/actions/runner/issues/801#issuecomment-2976165281
         - /opt:/opt:rw,rshared
-        - /opt:/__e/node20:ro,rshared
+        - /opt:/__e/node24:ro,rshared
     timeout-minutes: 90
     env:
       MACOSX_DEPLOYMENT_TARGET: ${{ matrix.arch == 'arm64' && '11.0' || '10.12' }}
@@ -185,7 +185,7 @@ jobs:
               ln -s /usr/bin/node /opt/bin/node
             fi
           fi
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: true
           fetch-depth: 50
@@ -305,7 +305,7 @@ jobs:
     runs-on: ${{ matrix.host_os }}
     timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: true
           fetch-depth: 50
@@ -355,7 +355,7 @@ jobs:
     timeout-minutes: 30
     needs: build-native
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Merge x86_64 & arm64 packages to universal one
         uses: ./.github/actions/merge-macos
 
@@ -365,7 +365,7 @@ jobs:
     timeout-minutes: 30
     needs: build-native
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           submodules: true
           fetch-depth: 50
@@ -386,6 +386,6 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Upload all artifacts to GitHub release
         uses: ./.github/actions/upload-to-github
