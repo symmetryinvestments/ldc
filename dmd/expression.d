@@ -3022,6 +3022,10 @@ extern (C++) final class CallExp : UnaExp
     bool inDebugStatement;  /// true if this was in a debug statement
     bool ignoreAttributes;  /// don't enforce attributes (e.g. call @gc function in @nogc code)
     bool isUfcsRewrite;     /// the first argument was pushed in here by a UFCS rewrite
+    version (IN_LLVM) {
+        bool isMustTail;    // If marked with pragma(musttail)
+    }
+
     VarDeclaration vthis2;  // container for multi-context
     Expression loweredFrom; // set if this is the result of a lowering
 

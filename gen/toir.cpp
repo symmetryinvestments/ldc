@@ -809,7 +809,8 @@ public:
     }
 
     DValue *result =
-        DtoCallFunction(e->loc, e->type, fnval, e->arguments, sretPointer, e->directcall);
+        DtoCallFunction(e->loc, e->type, fnval, e->arguments, sretPointer,
+                        e->directcall, e->isMustTail);
 
     if (canEmitVTableUnchangedAssumption && dfnval->vtable) {
       // Reload vtable ptr. It's the first element so instead of GEP+load we can

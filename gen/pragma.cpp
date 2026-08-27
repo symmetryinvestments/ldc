@@ -337,6 +337,15 @@ LDCPragma DtoGetPragma(Scope *sc, PragmaDeclaration *decl,
     return LLVMprofile_instr;
   }
 
+  // pragma(musttail)
+  if (ident == Id::musttail) {
+    if (args && args->length > 0) {
+      pragmaError("takes no parameters");
+      fatal();
+    }
+    return LLVMmusttail;
+  }
+
   return LLVMnone;
 }
 
