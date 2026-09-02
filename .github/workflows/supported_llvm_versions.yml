@@ -156,29 +156,6 @@ jobs:
               rm tests/sanitizers/asan_fiber.d
             fi
           fi
-
-          # --- TEMPORARY DIAGNOSTIC for tests/semantic/dcompute.d CI-only failure ---
-          # See https://github.com/symmetryinvestments/ldc/actions/runs/33396051195/job/99500710377
-          # ldc2 produces zero diagnostic output for this file on Linux CI only; trying
-          # to capture what actually happens (crash/hang/silent success) and whether it's
-          # a parallel-worker race (lit runs with default worker count == nproc).
-          echo "=== dcompute.d diagnostic: single serial run ==="
-          set +e
-          bin/ldc2 -o- -verrors=0 -Itests/semantic tests/semantic/dcompute.d
-          echo "exit code: $?"
-          echo "=== dcompute.d diagnostic: 8x parallel runs ==="
-          for i in $(seq 1 8); do
-            ( bin/ldc2 -o- -verrors=0 -Itests/semantic tests/semantic/dcompute.d > "${RUNNER_TEMP}/dcompute_diag_$i.log" 2>&1
-              echo "exit code: $?" >> "${RUNNER_TEMP}/dcompute_diag_$i.log" ) &
-          done
-          wait
-          for i in $(seq 1 8); do
-            echo "--- parallel run $i ---"
-            cat "${RUNNER_TEMP}/dcompute_diag_$i.log"
-          done
-          set -e
-          # --- END TEMPORARY DIAGNOSTIC ---
-
           ctest -V -R "lit-tests"
       - name: Run DMD testsuite
         if: success() || failure()
