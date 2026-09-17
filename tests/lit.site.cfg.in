@@ -50,7 +50,7 @@ config.suffixes = ['.d', '.i', '.c']
 # Set individual test timeout to 60
 supported, errormsg = lit_config.maxIndividualTestTimeIsSupported
 if supported:
-    lit_config.maxIndividualTestTime = 60
+    config.maxIndividualTestTime = 60
 else:
     lit_config.warning(
         "Setting a timeout per test not supported: "
@@ -131,16 +131,6 @@ if canDoLTO:
 
 if config.ldc_with_lld:
     config.available_features.add('internal_lld')
-
-# Add "link_WebAssembly" feature if we can link wasm (-link-internally or wasm-ld in PATH).
-if config.ldc_with_lld:
-    config.available_features.add('link_WebAssembly')
-else:
-    try:
-        if (subprocess.call(["wasm-ld", "--version"]) == 0):
-            config.available_features.add('link_WebAssembly')
-    except OSError:
-        pass
 
 config.target_triple = '(unused)'
 

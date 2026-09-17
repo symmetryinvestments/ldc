@@ -398,6 +398,14 @@ bool pragmaStmtSemantic(PragmaStatement ps, Scope* sc)
         if (!pragmaMangleSemantic(ps.loc, sc, ps.args, decls.length ? &decls : null))
             return false;
     }
+    else if (ps.ident == Id.musttail)
+    {
+        version (IN_LLVM)
+        {
+            if (!pragmaMustTailSemantic(ps))
+                return false;
+        }
+    }
     else if (!global.params.ignoreUnsupportedPragmas)
     {
         error(ps.loc, "unrecognized `pragma(%s)`", ps.ident.toChars());
@@ -775,5 +783,38 @@ private bool pragmaMangleSemantic(Loc loc, Scope* sc, Expressions* args, Dsymbol
         error(loc, "`pragma(mangle)` can only apply to a single declaration");
         return false;
     }
+    return true;
+}
+
+version (IN_LLVM)
+private bool pragmaMustTailSemantic(PragmaStatement ps)
+{
+    if (!ps._body)
+    {
+        error(ps.loc, "`pragma(musttail)` must be attached to a return statement");
+        return false;
+    }
+
+    auto rs = ps._body.isReturnStatement();
+    if (!rs)
+    {
+        error(ps.loc, "`pragma(musttail)` must be attached to a return statement");
+        return false;
+    }
+
+    if (!rs.exp)
+    {
+        error(ps.loc, "`pragma(musttail)` must be attached to a return statement returning result of a function call");
+        return false;
+    }
+
+    auto ce = rs.exp.isCallExp();
+    if (!ce)
+    {
+        error(ps.loc, "`pragma(musttail)` must be attached to a return statement returning result of a function call");
+        return false;
+    }
+
+    ce.isMustTail = true;
     return true;
 }

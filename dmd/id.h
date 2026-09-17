@@ -79,6 +79,7 @@ struct Id
     static Identifier *LDC_inline_ir;
     static Identifier *LDC_extern_weak;
     static Identifier *LDC_profile_instr;
+    static Identifier *musttail;
     static Identifier *dcReflect;
     // dcompute array comparison/equality hooks (see isDeviceArrayComparisonHook)
     static Identifier *comparison;
